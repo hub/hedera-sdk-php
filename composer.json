@@ -1,0 +1,73 @@
+{
+  "name": "zircon-tech/hedera-sdk-php",
+  "description": "Hedera Hashgraph SDK for PHP - A comprehensive PHP library for interacting with the Hedera network",
+  "type": "library",
+  "license": "MIT",
+  "keywords": [
+    "hedera",
+    "hashgraph",
+    "blockchain",
+    "cryptocurrency",
+    "sdk",
+    "php",
+    "grpc",
+    "protobuf"
+  ],
+  "authors": [
+    {
+      "name": "Zircon Tech",
+      "email": "info@zircon.tech"
+    }
+  ],
+  "homepage": "https://github.com/zircon-tech/hedera-sdk-php",
+  "support": {
+    "issues": "https://github.com/zircon-tech/hedera-sdk-php/issues",
+    "source": "https://github.com/zircon-tech/hedera-sdk-php"
+  },
+  "minimum-stability": "stable",
+  "prefer-stable": true,
+  "require": {
+    "php": ">=7.2",
+    "grpc/grpc": "^v1.39.0",
+    "google/protobuf": "^v3.12.2",
+    "ext-grpc": "*",
+    "ext-sodium": "*"
+  },
+  "require-dev": {
+    "phpunit/phpunit": "^9.0",
+    "phpstan/phpstan": "^1.0",
+    "squizlabs/php_codesniffer": "^3.6",
+    "ext-pcov": "*"
+  },
+  "scripts": {
+    "test": "phpunit",
+    "test-coverage": "phpunit --coverage-text --coverage-clover coverage/clover.xml --coverage-cobertura coverage/cobertura.xml",
+    "test-coverage-check": "php scripts/check-coverage.php",
+    "test-coverage-full": "@test-coverage && @test-coverage-check",
+    "cs-check": "phpcs",
+    "cs-fix": "phpcbf",
+    "stan": "phpstan analyse",
+    "publish-validate": "composer validate"
+  },
+  "autoload": {
+    "psr-4": {
+      "HederaSdk\\": "src/",
+      "GPBMetadata\\": [
+        "src/hedera_generated/node/GPBMetadata/",
+        "src/hedera_generated/mirror/GPBMetadata/",
+        "src/hedera_generated/platform_event/GPBMetadata/",
+        "src/hedera_generated/auxiliary_history/GPBMetadata/",
+        "src/hedera_generated/state_hints/GPBMetadata/",
+        "src/hedera_generated/auxiliary_hints/GPBMetadata/",
+        "src/hedera_generated/state_history/GPBMetadata/"
+      ],
+      "Proto\\": "src/hedera_generated/node/Proto/",
+      "Com\\Hedera\\Mirror\\Api\\Proto\\": "src/hedera_generated/mirror/Com/Hedera/Mirror/Api/Proto/",
+      "Com\\Hedera\\Hapi\\Platform\\Event\\": "src/hedera_generated/platform_event/Com/Hedera/Hapi/Platform/Event/",
+      "Com\\Hedera\\Hapi\\Services\\Auxiliary\\Hints\\": "src/hedera_generated/auxiliary_hints/Com/Hedera/Hapi/Services/Auxiliary/Hints/",
+      "Com\\Hedera\\Hapi\\Node\\State\\Hints\\": "src/hedera_generated/state_hints/Com/Hedera/Hapi/Node/State/Hints/",
+      "Com\\Hedera\\Hapi\\Services\\Auxiliary\\History\\": "src/hedera_generated/auxiliary_history/Com/Hedera/Hapi/Services/Auxiliary/History/",
+      "Com\\Hedera\\Hapi\\Node\\State\\History\\": "src/hedera_generated/state_history/Com/Hedera/Hapi/Node/State/History/"
+    }
+  }
+}

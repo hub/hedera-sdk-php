@@ -1,0 +1,119 @@
+name: Tests
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    
+    strategy:
+      matrix:
+        php-version: ['7.2', '7.3', '7.4', '8.0', '8.1']
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+    
+    - name: Setup PHP
+      uses: shivammathur/setup-php@v2
+      with:
+        php-version: ${{ matrix.php-version }}
+        extensions: grpc, pcov, sodium
+        coverage: pcov
+    
+    - name: Install dependencies
+      run: composer install --prefer-dist --no-progress
+    
+    - name: Run tests with coverage
+      run: composer run-script test-coverage
+    
+    - name: Validate coverage budget
+      run: composer run-script test-coverage-check
+      continue-on-error: false
+    
+    - name: Upload coverage to artifacts
+      uses: actions/upload-artifact@v3
+      with:
+        name: coverage-php-${{ matrix.php-version }}
+        path: coverage/
+        retention-days: 7
+
+  coverage-report:
+    needs: test
+    runs-on: ubuntu-latest
+    if: always() && (github.event_name == 'pull_request' || github.ref == 'refs/heads/main')
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+    
+    - name: Setup PHP
+      uses: shivammathur/setup-php@v2
+      with:
+        php-version: '8.1'
+        extensions: grpc, pcov, sodium
+        coverage: pcov
+    
+    - name: Install dependencies
+      run: composer install --prefer-dist --no-progress
+    
+    - name: Run tests with coverage
+      run: composer run-script test-coverage
+    
+    - name: Extract coverage percentage
+      id: coverage
+      env:
+        GITHUB_ACTIONS: true
+      run: |
+        OUTPUT=$(php scripts/check-coverage.php 2>&1 || true)
+        echo "$OUTPUT"
+        COVERAGE=$(echo "$OUTPUT" | grep -oE 'Coverage: [0-9.]+%' | grep -oE '[0-9.]+' || echo "0")
+        echo "percentage=$COVERAGE" >> $GITHUB_OUTPUT
+        PASS=$(echo "$OUTPUT" | grep -q "✓" && echo "true" || echo "false")
+        echo "pass=$PASS" >> $GITHUB_OUTPUT
+    
+    - name: Publish Coverage Summary
+      run: |
+        COVERAGE="${{ steps.coverage.outputs.percentage }}"
+        PASS="${{ steps.coverage.outputs.pass }}"
+        STATUS=$([ "$PASS" == "true" ] && echo "✅" || echo "❌")
+        
+        echo "## 📊 Code Coverage Report" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "| Métrica | Valor | Estado |" >> $GITHUB_STEP_SUMMARY
+        echo "|---------|-------|--------|" >> $GITHUB_STEP_SUMMARY
+        echo "| **Coverage** | \`${COVERAGE}%\` | $STATUS |" >> $GITHUB_STEP_SUMMARY
+        echo "| **Umbral mínimo** | \`80%\` | ⚠️ |" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        php scripts/check-coverage.php >> $GITHUB_STEP_SUMMARY 2>&1 || true
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "📥 Descarga los reportes completos desde los artifacts del workflow." >> $GITHUB_STEP_SUMMARY
+    
+    - name: Comment Coverage on PR
+      if: github.event_name == 'pull_request'
+      uses: marocchino/sticky-pull-request-comment@v2
+      with:
+        recreate: true
+        message: |
+          ## 📊 Code Coverage Report
+          
+          | Métrica | Valor | Estado |
+          |---------|-------|--------|
+          | **Coverage** | `${{ steps.coverage.outputs.percentage }}%` | ${{ steps.coverage.outputs.pass == 'true' && '✅' || '❌' }} |
+          | **Umbral mínimo** | `80%` | ⚠️ |
+          
+          <details>
+          <summary>Ver detalles del coverage</summary>
+          
+          ```
+          ${{ github.workspace }}/scripts/check-coverage.php
+          ```
+          
+          </details>
+          
+          📥 Los reportes completos (Clover XML, Cobertura XML) están disponibles en los [artifacts del workflow](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}).
+

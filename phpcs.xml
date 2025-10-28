@@ -1,0 +1,28 @@
+<?xml version="1.0"?>
+<ruleset name="HederaSDK">
+    <description>Coding standard for Hedera SDK PHP</description>
+    
+    <!-- Include PSR-12 standard -->
+    <rule ref="PSR12"/>
+    
+    <!-- Exclude generated files -->
+    <exclude-pattern>*/hedera_generated/*</exclude-pattern>
+    
+    <!-- Allow longer lines for complex method calls -->
+    <rule ref="Generic.Files.LineLength">
+        <properties>
+            <property name="lineLimit" value="120"/>
+            <property name="absoluteLineLimit" value="200"/>
+        </properties>
+    </rule>
+    
+    <!-- Allow snake_case for private methods (legacy code compatibility) -->
+    <rule ref="PSR1.Methods.CamelCapsMethodName">
+        <exclude-pattern>*/hedera_grpc_sdk.php</exclude-pattern>
+    </rule>
+    
+    <!-- Files to check -->
+    <file>src</file>
+    <file>tests</file>
+</ruleset>
+
