@@ -4,6 +4,8 @@ namespace HederaSdk\Tests;
 
 use PHPUnit\Framework\TestCase;
 
+require_once __DIR__ . '/../src/util.php';
+
 /**
  * Utility Functions Test Suite
  *
@@ -23,7 +25,8 @@ class UtilTest extends TestCase
      */
     public function testPrivateKeyValidation()
     {
-        $validPrivateKey = '302e020100300506032b65700422042084657f891c87139bed6464f645718b3406f4c7619e421c202e8c96c0502a7971';
+        $validPrivateKey = '302e020100300506032b657004220420'
+            . '84657f891c87139bed6464f645718b3406f4c7619e421c202e8c96c0502a7971';
 
         // Test valid private key format
         $this->assertStringStartsWith('302e020100300506032b657004220420', $validPrivateKey);
@@ -148,5 +151,143 @@ class UtilTest extends TestCase
 
         $this->assertContains('testnet', $networks, 'Testnet should be a valid network');
         $this->assertContains('mainnet', $networks, 'Mainnet should be a valid network');
+    }
+
+    /**
+     * Test decodePrivateKeyToKeypair function
+     *
+     * @group unit
+     * @group util
+     */
+    public function testDecodePrivateKeyToKeypair()
+    {
+        $validPrivateKey = '302e020100300506032b657004220420'
+            . '84657f891c87139bed6464f645718b3406f4c7619e421c202e8c96c0502a7971';
+
+        $keypair = decodePrivateKeyToKeypair($validPrivateKey);
+
+        $this->assertIsString($keypair, 'Keypair should be a string');
+        $this->assertEquals(96, strlen($keypair), 'Keypair should be 96 bytes long');
+    }
+
+    /**
+     * Test decodePrivateKeyToKeypair with invalid hex
+     *
+     * @group unit
+     * @group util
+     */
+    public function testDecodePrivateKeyToKeypairWithInvalidHex()
+    {
+        // hex2bin with invalid hex can either return false or throw a warning
+        // We'll test with a string that makes hex2bin return false
+        // Using a string with invalid hex characters will cause hex2bin to return false
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessage('Invalid hex.');
+
+        // Using a string that looks like hex but has an odd number of characters
+        // or using @suppressWarnings to handle the PHP warning
+        $invalidHex = 'gggggggggggggggggggggggggggggggggggggggggggggggggggggggg'
+            . 'gggggggggggggggggggggggggggggggg';
+        @decodePrivateKeyToKeypair($invalidHex);
+    }
+
+    /**
+     * Test get_keypair function
+     *
+     * @group unit
+     * @group util
+     */
+    public function testGetKeypair()
+    {
+        $validPrivateKey = '302e020100300506032b657004220420'
+            . '84657f891c87139bed6464f645718b3406f4c7619e421c202e8c96c0502a7971';
+
+        $keypair = get_keypair($validPrivateKey);
+
+        $this->assertIsArray($keypair, 'Keypair should be an array');
+        $this->assertArrayHasKey('private', $keypair, 'Keypair should have a private key');
+        $this->assertArrayHasKey('public', $keypair, 'Keypair should have a public key');
+        $this->assertIsString($keypair['private'], 'Private key should be a string');
+        $this->assertIsString($keypair['public'], 'Public key should be a string');
+        $this->assertEquals(64, strlen($keypair['private']), 'Private key should be 64 bytes long');
+        $this->assertEquals(32, strlen($keypair['public']), 'Public key should be 32 bytes long');
+    }
+
+    /**
+     * Test signString function
+     *
+     * @group unit
+     * @group util
+     */
+    public function testSignString()
+    {
+        $validPrivateKey = '302e020100300506032b657004220420'
+            . '84657f891c87139bed6464f645718b3406f4c7619e421c202e8c96c0502a7971';
+        $keypair = get_keypair($validPrivateKey);
+
+        $data = 'test message to sign';
+        $signature = signString($data, $keypair['private']);
+
+        $this->assertIsString($signature, 'Signature should be a string');
+        $this->assertEquals(64, strlen($signature), 'Signature should be 64 bytes long');
+
+        // Test that the same data produces the same signature
+        $signature2 = signString($data, $keypair['private']);
+        $this->assertEquals($signature, $signature2, 'Same data should produce the same signature');
+
+        // Test that different data produces different signatures
+        $differentData = 'different message';
+        $differentSignature = signString($differentData, $keypair['private']);
+        $this->assertNotEquals(
+            $signature,
+            $differentSignature,
+            'Different data should produce different signatures'
+        );
+    }
+
+    /**
+     * Test signEd25519 function
+     *
+     * @group unit
+     * @group util
+     */
+    public function testSignEd25519()
+    {
+        $validPrivateKey = '302e020100300506032b657004220420'
+            . '84657f891c87139bed6464f645718b3406f4c7619e421c202e8c96c0502a7971';
+        $bodyBytes = 'test message body bytes';
+
+        list($signature, $publicKey) = signEd25519($bodyBytes, $validPrivateKey);
+
+        $this->assertIsString($signature, 'Signature should be a string');
+        $this->assertIsString($publicKey, 'Public key should be a string');
+        $this->assertEquals(64, strlen($signature), 'Signature should be 64 bytes long');
+        $this->assertEquals(32, strlen($publicKey), 'Public key should be 32 bytes long');
+
+        // Test that the function returns consistent results
+        list($signature2, $publicKey2) = signEd25519($bodyBytes, $validPrivateKey);
+        $this->assertEquals($signature, $signature2, 'Same input should produce the same signature');
+        $this->assertEquals($publicKey, $publicKey2, 'Same input should produce the same public key');
+    }
+
+    /**
+     * Test signEd25519 with different data
+     *
+     * @group unit
+     * @group util
+     */
+    public function testSignEd25519WithDifferentData()
+    {
+        $validPrivateKey = '302e020100300506032b657004220420'
+            . '84657f891c87139bed6464f645718b3406f4c7619e421c202e8c96c0502a7971';
+
+        $bodyBytes1 = 'first message';
+        $bodyBytes2 = 'second message';
+
+        list($signature1, $publicKey1) = signEd25519($bodyBytes1, $validPrivateKey);
+        list($signature2, $publicKey2) = signEd25519($bodyBytes2, $validPrivateKey);
+
+        $this->assertNotEquals($signature1, $signature2, 'Different data should produce different signatures');
+        $this->assertEquals($publicKey1, $publicKey2, 'Same private key should produce the same public key');
     }
 }

@@ -62,8 +62,13 @@ class Client
       */
     public $accountNum;
 
-    public function __construct(string $mirrorNodeUrl, string $mainNodeUrl, int $mainNodeNum, string $privateKey, int $accountNum)
-    {
+    public function __construct(
+        string $mirrorNodeUrl,
+        string $mainNodeUrl,
+        int $mainNodeNum,
+        string $privateKey,
+        int $accountNum
+    ) {
         // Validate mirror node URL
         if (empty(trim($mirrorNodeUrl))) {
             throw new \InvalidArgumentException('Mirror node URL cannot be empty');
@@ -95,10 +100,15 @@ class Client
         // 04 20 - OCTET STRING (32 bytes) - the actual private key
         $ed25519DerPrefix = '302e020100300506032b657004220420';
         if (strpos($privateKey, $ed25519DerPrefix) !== 0) {
-            throw new \InvalidArgumentException('Private key must be an Ed25519 key in DER format (hex). Expected prefix: ' . $ed25519DerPrefix . '. Note: Currently only Ed25519 keys are supported.');
+            $message = 'Private key must be an Ed25519 key in DER format (hex). '
+                . 'Expected prefix: ' . $ed25519DerPrefix . '. '
+                . 'Note: Currently only Ed25519 keys are supported.';
+            throw new \InvalidArgumentException($message);
         }
         if (strlen($privateKey) !== 96) {
-            throw new \InvalidArgumentException('Ed25519 private key in DER format must be exactly 96 hex characters (48 bytes) long');
+            $message = 'Ed25519 private key in DER format must be exactly 96 hex '
+                . 'characters (48 bytes) long';
+            throw new \InvalidArgumentException($message);
         }
 
         // Validate account number (should be > 0)
@@ -130,6 +140,24 @@ class Client
         ]);
     }
 
+    private function getTransactionId(\Proto\AccountID $accountId): \Proto\TransactionID
+    {
+        $transactionId = new \Proto\TransactionID();
+        $transactionId->setAccountID($accountId);
+
+        $timestampFloat = microtime(true);
+        $timestamp = intval(round($timestampFloat * 10000, 0, PHP_ROUND_HALF_DOWN));
+        $seconds = intval(round($timestamp / 10000, 0, PHP_ROUND_HALF_DOWN));
+        $nanos = intval(($timestamp % 10000) * 100000);
+
+        $validStart = new \Proto\Timestamp();
+        $validStart->setSeconds($seconds - 20);
+        $validStart->setNanos($nanos);
+
+        $transactionId->setTransactionValidStart($validStart);
+        return $transactionId;
+    }
+
     private function handlePrecheckCode(int $ccode)
     {
         if ($ccode !== \Proto\ResponseCodeEnum::OK) {
@@ -144,15 +172,7 @@ class Client
         $accountId = new \Proto\AccountID();
         $accountId->setAccountNum($this->accountNum);
 
-        $transactionId = new \Proto\TransactionID();
-        $transactionId->setAccountID($accountId);
-
-        $validStart = new \Proto\Timestamp();
-        $nowUTC = gmdate('U');
-        $validStart->setSeconds($nowUTC);
-        $validStart->setNanos(0);
-
-        $transactionId->setTransactionValidStart($validStart);
+        $transactionId = $this->getTransactionId($accountId);
 
         // Payment recipient node
         $nodeAccountId = new \Proto\AccountID();
@@ -231,6 +251,33 @@ class Client
 
     public function subscribeTopic(int $topicNum)
     {
+        // The mirror node's ConsensusService depends on BasicTypes, Timestamp, and ConsensusSubmitMessage
+        // which are defined in the node namespace. We need to initialize these dependencies first
+        // before initializing the mirror's ConsensusService to avoid descriptor pool conflicts.
+        // There are two ConsensusService classes with the same namespace but different implementations:
+        // - node/GPBMetadata/ConsensusService (loaded first by autoloader)
+        // - mirror/GPBMetadata/ConsensusService (needs node's dependencies initialized)
+
+        // Initialize node dependencies first (these are shared between node and mirror)
+        if (class_exists('\GPBMetadata\BasicTypes')) {
+            \GPBMetadata\BasicTypes::initOnce();
+        }
+        if (class_exists('\GPBMetadata\Timestamp')) {
+            \GPBMetadata\Timestamp::initOnce();
+        }
+        if (class_exists('\GPBMetadata\ConsensusSubmitMessage')) {
+            \GPBMetadata\ConsensusSubmitMessage::initOnce();
+        }
+
+        // Force load the mirror's ConsensusService metadata file directly
+        // Since both mirror and node have ConsensusService in the same namespace,
+        // we need to ensure the mirror version is loaded, not the node version
+        $mirrorConsensusServiceFile = __DIR__ . '/hedera_generated/mirror/GPBMetadata/ConsensusService.php';
+        if (file_exists($mirrorConsensusServiceFile)) {
+            require_once $mirrorConsensusServiceFile;
+            \GPBMetadata\ConsensusService::initOnce();
+        }
+
         $request = new ConsensusTopicQuery();
         $topicId = new \Proto\TopicID();
         $topicId->setShardNum(0);
@@ -287,7 +334,11 @@ class Client
         $header->setResponseType(\Proto\ResponseType::ANSWER_ONLY);
 
         // Create Transaction with signed payment
-        [$payment, $signedTransactionBytes] = $this->buildExecutionPaymentTransaction(intval(round(0.1 * $this->tinybarToHbarRatio, 0, PHP_ROUND_HALF_UP)), $fee);
+        $paymentAmount = intval(round(0.1 * $this->tinybarToHbarRatio, 0, PHP_ROUND_HALF_UP));
+        [$payment, $signedTransactionBytes] = $this->buildExecutionPaymentTransaction(
+            $paymentAmount,
+            $fee
+        );
         $payment->setSignedTransactionBytes($signedTransactionBytes);
         $header->setPayment($payment);
 
@@ -343,15 +394,7 @@ class Client
         $accountId = new \Proto\AccountID();
         $accountId->setAccountNum($this->accountNum);
 
-        $transactionId = new \Proto\TransactionID();
-        $transactionId->setAccountID($accountId);
-
-        $validStart = new \Proto\Timestamp();
-        $nowUTC = gmdate('U');
-        $validStart->setSeconds($nowUTC);
-        $validStart->setNanos(0);
-
-        $transactionId->setTransactionValidStart($validStart);
+        $transactionId = $this->getTransactionId($accountId);
 
         // Payment recipient node
         $nodeAccountId = new \Proto\AccountID();
@@ -421,15 +464,7 @@ class Client
         $accountId = new \Proto\AccountID();
         $accountId->setAccountNum($this->accountNum);
 
-        $transactionId = new \Proto\TransactionID();
-        $transactionId->setAccountID($accountId);
-
-        $validStart = new \Proto\Timestamp();
-        $nowUTC = gmdate('U');
-        $validStart->setSeconds($nowUTC);
-        $validStart->setNanos(0);
-
-        $transactionId->setTransactionValidStart($validStart);
+        $transactionId = $this->getTransactionId($accountId);
 
         // Payment recipient node
         $nodeAccountId = new \Proto\AccountID();
