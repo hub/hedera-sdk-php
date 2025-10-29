@@ -46,6 +46,9 @@ class HederaSDKTest extends TestCase
 
         $transactionId = $client->createTopic($this->testConfig['fee']);
 
+        // Sleep to avoid saturating the network
+        sleep(2);
+
         $this->assertNotNull($transactionId, 'Transaction ID should not be null');
         $this->assertInstanceOf(
             \Proto\TransactionID::class,
@@ -77,6 +80,9 @@ class HederaSDKTest extends TestCase
         sleep(2);
 
         $receipt = $client->getTransactionReceipts($transactionId);
+
+        // Sleep to avoid saturating the network
+        sleep(2);
 
         $this->assertNotNull($receipt, 'Receipt should not be null');
         $this->assertInstanceOf(
@@ -119,6 +125,9 @@ class HederaSDKTest extends TestCase
         // Step 3: Get receipt
         $receipt = $client->getTransactionReceipts($transactionId);
         $this->assertNotNull($receipt, 'Receipt should not be null');
+
+        // Sleep to avoid saturating the network
+        sleep(2);
 
         // Step 4: Verify success
         $status = $receipt->getStatus();
@@ -442,6 +451,9 @@ class HederaSDKTest extends TestCase
 
         $balance = $client->checkAccountBalance($this->testConfig['accountNum']);
 
+        // Sleep to avoid saturating the network
+        sleep(2);
+
         $this->assertIsFloat($balance, 'Balance should be a float');
         $this->assertGreaterThanOrEqual(0, $balance, 'Balance should be non-negative');
     }
@@ -463,6 +475,9 @@ class HederaSDKTest extends TestCase
         );
 
         $versionInfo = $client->getVersionInfoWithPayment($this->testConfig['fee']);
+
+        // Sleep to avoid saturating the network
+        sleep(2);
 
         $this->assertInstanceOf(
             \Proto\NetworkGetVersionInfoResponse::class,
@@ -499,6 +514,9 @@ class HederaSDKTest extends TestCase
             $topicId->getTopicNum(),
             'Test message'
         );
+
+        // Sleep to avoid saturating the network
+        sleep(2);
 
         $this->assertNotNull($messageTransactionId, 'Message transaction ID should not be null');
         $this->assertInstanceOf(
@@ -538,8 +556,15 @@ class HederaSDKTest extends TestCase
                 $topicId->getTopicNum(),
                 ''
             );
+            
+            // Sleep to avoid saturating the network
+            sleep(2);
+            
             $this->assertNotNull($messageTransactionId, 'Message transaction ID should not be null');
         } catch (\Exception $e) {
+            // Sleep to avoid saturating the network
+            sleep(2);
+            
             // If empty messages are not allowed, that's acceptable
             $this->assertStringContainsString(
                 'Precheck code',
@@ -576,9 +601,16 @@ class HederaSDKTest extends TestCase
             $topicId->getTopicNum(),
             'Test message for subscription'
         );
+        
+        // Sleep to avoid saturating the network
+        sleep(2);
+        
         sleep(3); // Wait a bit more for message to be processed
 
         $messages = $client->subscribeTopic($topicId->getTopicNum());
+
+        // Sleep to avoid saturating the network
+        sleep(2);
 
         $this->assertIsArray($messages, 'Messages should be an array');
         // Messages array might be empty if no messages were found in the time window

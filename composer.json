@@ -1,5 +1,5 @@
 {
-  "name": "zircon-tech/hedera-sdk-php",
+  "name": "hub/hedera-sdk-php",
   "description": "Hedera Hashgraph SDK for PHP - A comprehensive PHP library for interacting with the Hedera network",
   "type": "library",
   "license": "MIT",
@@ -19,10 +19,10 @@
       "email": "info@zircon.tech"
     }
   ],
-  "homepage": "https://github.com/zircon-tech/hedera-sdk-php",
+  "homepage": "https://github.com/hub/hedera-sdk-php",
   "support": {
-    "issues": "https://github.com/zircon-tech/hedera-sdk-php/issues",
-    "source": "https://github.com/zircon-tech/hedera-sdk-php"
+    "issues": "https://github.com/hub/hedera-sdk-php/issues",
+    "source": "https://github.com/hub/hedera-sdk-php"
   },
   "minimum-stability": "stable",
   "prefer-stable": true,

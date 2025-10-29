@@ -1,6 +1,6 @@
 # Hedera SDK PHP
 
-[![Tests](https://github.com/zircon-tech/hedera-sdk-php/actions/workflows/test.yml/badge.svg)](https://github.com/zircon-tech/hedera-sdk-php/actions/workflows/test.yml)
+[![Tests](https://github.com/hub/hedera-sdk-php/actions/workflows/test.yml/badge.svg)](https://github.com/hub/hedera-sdk-php/actions/workflows/test.yml)
 
 # Rationale
 GRPC php bindings for hedera API. Compatible with php7.2+ (until 8.1 at least).
