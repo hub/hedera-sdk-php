@@ -556,15 +556,15 @@ class HederaSDKTest extends TestCase
                 $topicId->getTopicNum(),
                 ''
             );
-            
+
             // Sleep to avoid saturating the network
             sleep(2);
-            
+
             $this->assertNotNull($messageTransactionId, 'Message transaction ID should not be null');
         } catch (\Exception $e) {
             // Sleep to avoid saturating the network
             sleep(2);
-            
+
             // If empty messages are not allowed, that's acceptable
             $this->assertStringContainsString(
                 'Precheck code',
@@ -601,10 +601,10 @@ class HederaSDKTest extends TestCase
             $topicId->getTopicNum(),
             'Test message for subscription'
         );
-        
+
         // Sleep to avoid saturating the network
         sleep(2);
-        
+
         sleep(3); // Wait a bit more for message to be processed
 
         $messages = $client->subscribeTopic($topicId->getTopicNum());

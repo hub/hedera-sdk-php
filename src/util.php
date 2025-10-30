@@ -1,14 +1,16 @@
 <?php
 
+namespace HederaSdk;
+
 function signEd25519(string $bodyBytes, string $derHex): array
 {
-    $keys = get_keypair($derHex);
+    $keys = getKeypair($derHex);
     $signature = signString($bodyBytes, $keys['private']);
 
     return [$signature, $keys['public']];
 }
 
-function get_keypair(string $derHex): array
+function getKeypair(string $derHex): array
 {
     $keypair = decodePrivateKeyToKeypair($derHex);
     $secretKey = sodium_crypto_sign_secretkey($keypair);
@@ -26,7 +28,7 @@ function decodePrivateKeyToKeypair(string $derHex): string
 {
     $der = hex2bin($derHex);
     if ($der === false) {
-        throw new InvalidArgumentException('Invalid hex.');
+        throw new \InvalidArgumentException('Invalid hex.');
     }
     $privateKeyRaw = substr($der, -32);
     $keypair = sodium_crypto_sign_seed_keypair($privateKeyRaw);

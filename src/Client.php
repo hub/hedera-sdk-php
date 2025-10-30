@@ -2,14 +2,13 @@
 
 namespace HederaSdk;
 
-require_once __DIR__ . '/../vendor/autoload.php';
-require_once __DIR__ . '/util.php';
+//require_once __DIR__ . '/../vendor/autoload.php';
 
 use Com\Hedera\Mirror\Api\Proto\ConsensusServiceClient as MirrorConsensusServiceClient;
 use Com\Hedera\Mirror\Api\Proto\NetworkServiceClient as MirrorNetworkServiceClient;
 use Com\Hedera\Mirror\Api\Proto\ConsensusTopicQuery;
 use Com\Hedera\Mirror\Api\Proto\ConsensusTopicResponse;
-use Com\Hedera\Mirror\Api\Proto\AddressBookQuery;
+//use Com\Hedera\Mirror\Api\Proto\AddressBookQuery;
 use Proto\NetworkServiceClient;
 use Proto\CryptoServiceClient;
 use Proto\ConsensusServiceClient;

@@ -71,6 +71,14 @@
       "Com\\Hedera\\Hapi\\Node\\State\\Hints\\": "src/hedera_generated/state_hints/Com/Hedera/Hapi/Node/State/Hints/",
       "Com\\Hedera\\Hapi\\Services\\Auxiliary\\History\\": "src/hedera_generated/auxiliary_history/Com/Hedera/Hapi/Services/Auxiliary/History/",
       "Com\\Hedera\\Hapi\\Node\\State\\History\\": "src/hedera_generated/state_history/Com/Hedera/Hapi/Node/State/History/"
-    }
+    },
+    "files": [
+      "src/util.php"
+    ]
+  },
+  "autoload-dev": {
+      "psr-4": {
+          "HederaSdkTests\\": "tests/"
+      }
   }
 }

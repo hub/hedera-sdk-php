@@ -42,3 +42,20 @@ pecl install grpc-1.76.0
 echo -e "; configuration for php grpc module\n; priority=20\nextension=grpc.so\n" > /etc/php/8.1/mods-available/grpc.ini
 ln -s /etc/php/8.1/mods-available/grpc.ini /etc/php/8.1/cli/conf.d/20-grpc.ini
 ```
+
+
+# Improvements
+
+* increase tests coverage.
+* exhaustive features integrations (basically, only HCS is integrated now).
+* separate mirror client from main client and avoid namespace clash between "ConsensusService".
+* Transform precheck codes enums to more user friendly messages.
+* More flexible interface to customize any internal parameter, inspired from other non-PHP SDKs like https://github.com/hiero-ledger/hiero-sdk-js.
+* Expose internal types/messages or build a more friendly wrapper around them (eg: handle topicId like strings and parse internally into realm, shard and num).
+* Include hbar to tinybar utilities and arbitrary precision operations.
+* Autodetect node number from node host or viceversa by using AddressBooks.
+* Autodetect account number from public key or viceversa.
+* Allow to perform EVM compatible operations.
+* Improve fee handling and trx payment.
+* Support EVM compatible layer (ECDSA encryption would be needed then).
+* Integrate with mirror JSON-RPC interfaces for old transactions.

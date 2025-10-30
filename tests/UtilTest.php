@@ -4,8 +4,6 @@ namespace HederaSdk\Tests;
 
 use PHPUnit\Framework\TestCase;
 
-require_once __DIR__ . '/../src/util.php';
-
 /**
  * Utility Functions Test Suite
  *
@@ -164,7 +162,7 @@ class UtilTest extends TestCase
         $validPrivateKey = '302e020100300506032b657004220420'
             . '84657f891c87139bed6464f645718b3406f4c7619e421c202e8c96c0502a7971';
 
-        $keypair = decodePrivateKeyToKeypair($validPrivateKey);
+        $keypair = \HederaSdk\decodePrivateKeyToKeypair($validPrivateKey);
 
         $this->assertIsString($keypair, 'Keypair should be a string');
         $this->assertEquals(96, strlen($keypair), 'Keypair should be 96 bytes long');
@@ -188,7 +186,7 @@ class UtilTest extends TestCase
         // or using @suppressWarnings to handle the PHP warning
         $invalidHex = 'gggggggggggggggggggggggggggggggggggggggggggggggggggggggg'
             . 'gggggggggggggggggggggggggggggggg';
-        @decodePrivateKeyToKeypair($invalidHex);
+        @\HederaSdk\decodePrivateKeyToKeypair($invalidHex);
     }
 
     /**
@@ -202,7 +200,7 @@ class UtilTest extends TestCase
         $validPrivateKey = '302e020100300506032b657004220420'
             . '84657f891c87139bed6464f645718b3406f4c7619e421c202e8c96c0502a7971';
 
-        $keypair = get_keypair($validPrivateKey);
+        $keypair = \HederaSdk\getKeypair($validPrivateKey);
 
         $this->assertIsArray($keypair, 'Keypair should be an array');
         $this->assertArrayHasKey('private', $keypair, 'Keypair should have a private key');
@@ -223,21 +221,21 @@ class UtilTest extends TestCase
     {
         $validPrivateKey = '302e020100300506032b657004220420'
             . '84657f891c87139bed6464f645718b3406f4c7619e421c202e8c96c0502a7971';
-        $keypair = get_keypair($validPrivateKey);
+        $keypair = \HederaSdk\getKeypair($validPrivateKey);
 
         $data = 'test message to sign';
-        $signature = signString($data, $keypair['private']);
+        $signature = \HederaSdk\signString($data, $keypair['private']);
 
         $this->assertIsString($signature, 'Signature should be a string');
         $this->assertEquals(64, strlen($signature), 'Signature should be 64 bytes long');
 
         // Test that the same data produces the same signature
-        $signature2 = signString($data, $keypair['private']);
+        $signature2 = \HederaSdk\signString($data, $keypair['private']);
         $this->assertEquals($signature, $signature2, 'Same data should produce the same signature');
 
         // Test that different data produces different signatures
         $differentData = 'different message';
-        $differentSignature = signString($differentData, $keypair['private']);
+        $differentSignature = \HederaSdk\signString($differentData, $keypair['private']);
         $this->assertNotEquals(
             $signature,
             $differentSignature,
@@ -257,7 +255,7 @@ class UtilTest extends TestCase
             . '84657f891c87139bed6464f645718b3406f4c7619e421c202e8c96c0502a7971';
         $bodyBytes = 'test message body bytes';
 
-        list($signature, $publicKey) = signEd25519($bodyBytes, $validPrivateKey);
+        list($signature, $publicKey) = \HederaSdk\signEd25519($bodyBytes, $validPrivateKey);
 
         $this->assertIsString($signature, 'Signature should be a string');
         $this->assertIsString($publicKey, 'Public key should be a string');
@@ -265,7 +263,7 @@ class UtilTest extends TestCase
         $this->assertEquals(32, strlen($publicKey), 'Public key should be 32 bytes long');
 
         // Test that the function returns consistent results
-        list($signature2, $publicKey2) = signEd25519($bodyBytes, $validPrivateKey);
+        list($signature2, $publicKey2) = \HederaSdk\signEd25519($bodyBytes, $validPrivateKey);
         $this->assertEquals($signature, $signature2, 'Same input should produce the same signature');
         $this->assertEquals($publicKey, $publicKey2, 'Same input should produce the same public key');
     }
@@ -284,8 +282,8 @@ class UtilTest extends TestCase
         $bodyBytes1 = 'first message';
         $bodyBytes2 = 'second message';
 
-        list($signature1, $publicKey1) = signEd25519($bodyBytes1, $validPrivateKey);
-        list($signature2, $publicKey2) = signEd25519($bodyBytes2, $validPrivateKey);
+        list($signature1, $publicKey1) = \HederaSdk\signEd25519($bodyBytes1, $validPrivateKey);
+        list($signature2, $publicKey2) = \HederaSdk\signEd25519($bodyBytes2, $validPrivateKey);
 
         $this->assertNotEquals($signature1, $signature2, 'Different data should produce different signatures');
         $this->assertEquals($publicKey1, $publicKey2, 'Same private key should produce the same public key');
